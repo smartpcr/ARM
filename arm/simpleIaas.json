@@ -1,0 +1,73 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "serviceFarmName": {
+          "type": "string",
+          "minLength": 1
+      },
+      "serverFarmSKU": {
+          "type": "string",
+          "allowedValues": [
+              "Free",
+              "Shared",
+              "Basic",
+              "Standard"
+          ],
+          "defaultValue": "Free"
+      },
+      "serverFarmWorkerSize": {
+          "type": "string",
+          "allowedValues": [
+              "0",
+              "1",
+              "2"
+          ],
+          "defaultValue": "0"
+      }
+
+  },
+  "variables": {
+      "webAppName": "[concat('webapp', uniqueString(resourceGroup().id))]"
+
+  },
+  "resources": [
+    {
+      "name": "[parameters('serviceFarmName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-06-01",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[parameters('serviceFarmName')]"
+      },
+      "properties": {
+        "name": "[parameters('serviceFarmName')]",
+        "sku": "[parameters('serverFarmSKU')]",
+        "workerSize": "[parameters('serverFarmWorkerSize')]",
+        "numberOfWorkers": 1
+      }
+    },
+      {
+          "name": "[variables('webAppName')]",
+          "type": "Microsoft.Web/sites",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2015-08-01",
+        "dependsOn": [
+          "[concat('Microsoft.Web/serverfarms/', parameters('serviceFarmName'))]"
+        ],
+        "tags": {
+          "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('serviceFarmName'))]": "Resource",
+          "displayName": "[variables('webAppName')]"
+        },
+        "properties": {
+          "name": "[variables('webAppName')]",
+          "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('serviceFarmName'))]"
+        }
+      }
+
+  ],
+  "outputs": {
+
+  }
+}
